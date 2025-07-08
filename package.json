@@ -1,0 +1,28 @@
+{
+  "name": "grammy-bot",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "npx tsc --build && npx tsc-alias",
+    "prod": "node dist/main.js",
+    "dev": "nodemon",
+    "prettier:fix": "npx prettier --fix ./src",
+    "prettier:check": "npx prettier --check ./src",
+    "eslint:fix": "npx eslint --fix ./src",
+    "eslint:check": "npx eslint --check ./src"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.1.0",
+    "grammy": "^1.37.0"
+  }
+}

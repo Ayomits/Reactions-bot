@@ -1,0 +1,53 @@
+import { Context } from 'grammy';
+import { LiteralEnum } from '../../types/literal-enum';
+import {
+  ArgumentParsePipelineResult,
+  ArgumentParsePipelineResults,
+} from './argumets/argument-parser.types';
+import { KeyPrimitive } from '@/lib/types/key-primitive';
+import { ObjectKeys } from '@/lib/types/object-keys';
+
+export const ArgumentType = {
+  String: 'string',
+  Number: 'number',
+} as const;
+
+export type ArgumentType = LiteralEnum<typeof ArgumentType>;
+
+export interface TelegramCommandArgument<
+  AV extends unknown[] = unknown[],
+  D extends unknown = unknown,
+> {
+  /**
+   * Uses for object key
+   */
+  displayName: string;
+  type: ArgumentType;
+
+  required?: boolean;
+  allowedValues?: AV;
+  default?: D;
+}
+
+export interface TelegramExecuteArgument<T = unknown> {
+  value: T;
+  position: number;
+}
+
+export type TelegramExecuteArguments<K extends string = string, T = unknown> = Record<
+  K,
+  TelegramExecuteArgument<T>
+>;
+
+export type TelegramCommandArguments = Record<string, TelegramCommandArgument>;
+
+export interface TelegramCommand<
+  AR extends TelegramCommandArguments = TelegramCommandArguments,
+  C extends Context = Context,
+> {
+  name: string;
+  args?: AR;
+
+  execute(ctx: C, args?: TelegramExecuteArguments<keyof AR & string>): Promise<unknown> | unknown;
+  fallback?(ctx: C, results: ArgumentParsePipelineResults<keyof AR & string>): Promise<unknown> | unknown
+}
