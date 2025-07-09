@@ -6,7 +6,8 @@ export const ArgumentType = {
   String: 'string',
   Number: 'number',
   Any: 'any',
-  Text: "text"
+  Text: 'text',
+  Mention: 'mention',
 } as const;
 
 export type ArgumentType = LiteralEnum<typeof ArgumentType>;
@@ -26,14 +27,14 @@ export interface TelegramCommandArgument<
   default?: D;
 }
 
-export interface TelegramExecuteArgument<T = unknown> {
+export interface TelegramExecuteArgument<T = any> {
   value: T;
   position: number;
 }
 
-export type TelegramExecuteArguments<K extends string = string, T = unknown> = Record<
+export type TelegramExecuteArguments<K extends string = string> = Record<
   K,
-  TelegramExecuteArgument<T>
+  TelegramExecuteArgument
 >;
 
 export type TelegramCommandArguments = Record<string, TelegramCommandArgument>;
@@ -43,9 +44,10 @@ export interface TelegramCommand<
   C extends Context = Context,
 > {
   name: string;
+  description: string;
   args?: AR;
 
-  execute(ctx: C, args?: TelegramExecuteArguments<keyof AR & string>): Promise<unknown> | unknown;
+  execute(ctx: C, args?: any): Promise<unknown> | unknown;
 
   fallback?(
     ctx: C,

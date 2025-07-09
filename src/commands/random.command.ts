@@ -1,6 +1,10 @@
 import { ArgumentParsePipelineResults } from '@/lib/parsers/argumets/argument-parser.types';
 import { createArguments } from '@/lib/parsers/argumets/create-arguments';
-import { TelegramCommand, TelegramExecuteArguments } from '@/lib/telegram/commands/command';
+import {
+  TelegramCommand,
+  TelegramExecuteArgument,
+  TelegramExecuteArguments,
+} from '@/lib/telegram/commands/command';
 import { ObjectKeys } from '@/lib/types/object-keys';
 import { Context } from 'grammy';
 
@@ -19,14 +23,18 @@ const randomCommandArgs = createArguments({
   },
 });
 
+interface RandomCommandArguments
+  extends TelegramExecuteArguments<ObjectKeys<typeof randomCommandArgs>> {
+  min: TelegramExecuteArgument<number>;
+  max: TelegramExecuteArgument<number>;
+}
+
 export class RandomCommand implements TelegramCommand<typeof randomCommandArgs> {
   name = 'random';
+  description = "Generate random number";
   args = randomCommandArgs;
 
-  execute(
-    ctx: Context,
-    args: TelegramExecuteArguments<ObjectKeys<typeof randomCommandArgs>, number>
-  ) {
+  execute(ctx: Context, args: RandomCommandArguments) {
     const randomValue =
       Math.floor(Math.random() * (args.max.value - args.min.value + 1)) + args.min.value;
     return ctx.reply(`Случайное число: ${randomValue}`);

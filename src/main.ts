@@ -3,15 +3,22 @@ import { ConfigService } from './lib/config/config.service';
 import { RandomCommand } from './commands/random.command';
 import { PingCommand } from './commands/ping.command';
 import { ReactionCommand } from './commands/reaction.command';
+import { ReactionsCommand } from './commands/reactions.command';
 
 async function bootstrap() {
   const config = new ConfigService();
+
   const bot = new TelegramClient(config.get('TG_TOKEN'), {
-    commands: [new RandomCommand(), new PingCommand(), new ReactionCommand()],
+    commands: [
+      new RandomCommand(),
+      new PingCommand(),
+      new ReactionCommand(),
+      new ReactionsCommand(),
+    ],
   });
 
-  bot.start().then(() => {
-    console.log(bot.commands);
+  await bot.start({
+    onStart: () => console.log('Bot started'),
   });
 }
 

@@ -1,6 +1,8 @@
 import { OtakuReactionApi } from '@/lib/api/reactions/reaction.api';
 import { OtakuReactionApiKeys } from '@/lib/api/reactions/reaction.types';
+import { ArgumentParsePipelineResults } from '@/lib/parsers/argumets/argument-parser.types';
 import { createArguments } from '@/lib/parsers/argumets/create-arguments';
+import { TextMessageBuilder } from '@/lib/telegram/builders/message.builder';
 import {
   TelegramCommand,
   TelegramExecuteArgument,
@@ -18,6 +20,11 @@ const reactionArguments = createArguments({
     default: OtakuReactionApiKeys.Happy,
     allowedValues: Object.values(OtakuReactionApiKeys),
   },
+  mention: {
+    displayName: 'mention',
+    type: 'mention',
+    required: false,
+  },
   msg: {
     displayName: 'message',
     type: 'text',
@@ -33,6 +40,7 @@ interface ReactionExecuteArguments
 
 export class ReactionCommand implements TelegramCommand<typeof reactionArguments> {
   name = 'reaction';
+  description = 'Send RP command';
   args = reactionArguments;
 
   async execute(ctx: Context, args: ReactionExecuteArguments) {
@@ -48,17 +56,24 @@ export class ReactionCommand implements TelegramCommand<typeof reactionArguments
         { parse_mode: 'MarkdownV2' }
       );
     }
-    let resMsg: string = `🌟 *Пользователь:* ${author.user.first_name}\n🎭 ${TelegramMarkdown.bold('Реакция:')} ${reaction.value}`
+    const resMsg = new TextMessageBuilder()
+      .setOption(TelegramMarkdown.bold('Пользователь'), author.user.first_name)
+      .setParagraph()
+      .setOption(`🎭 ${TelegramMarkdown.bold('Реакция:')}`, reaction.value);
     if (msg.value) {
-      resMsg += `\n ${msg.value && `📝  ${TelegramMarkdown.bold('Сообщение:')} ${msg.value}`}`
+      resMsg.setParagraph().setOption(`📝  ${TelegramMarkdown.bold('Сообщение:')}`, msg.value);
     }
     await Promise.all([
       ctx.api.deleteMessage(ctx.chat!.id!, loadingMsg.message_id),
       ctx.replyWithAnimation(parsedReaction!.url, {
-        caption: resMsg,
+        caption: resMsg.toPlain(),
         parse_mode: 'MarkdownV2',
       }),
     ]);
+  }
+
+  fallback(ctx: Context, results: ArgumentParsePipelineResults<'reaction' | 'mention' | 'msg'>): Promise<unknown> | unknown {
+    return ctx.reply(JSON.stringify(results))
   }
 
   private async tmpReactionParser(reaction: OtakuReactionApiKeys) {

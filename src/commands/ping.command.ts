@@ -3,6 +3,7 @@ import { Context } from 'grammy';
 
 export class PingCommand implements TelegramCommand {
   name: string = 'ping';
+  description: string = "Check telegram message latency";
 
   execute(ctx: Context) {
     const now = Date.now();

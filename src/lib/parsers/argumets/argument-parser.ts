@@ -12,9 +12,13 @@ import {
 } from './argument-parser.types';
 import { ObjectKeys } from '@/lib/types/object-keys';
 import { Parser } from '../parser.interface';
+import { TelegramMarkdownParser } from 'tg-text-formatter';
+import { Context } from 'grammy';
 
-export class ArgumentParser<EA extends TelegramCommandArguments = TelegramCommandArguments>
-  implements Parser
+export class ArgumentParser<
+  EA extends TelegramCommandArguments = TelegramCommandArguments,
+  C extends Context = Context,
+> implements Parser
 {
   private readonly receivedArgs: string;
   private readonly expected: TelegramCommandArguments;
@@ -49,8 +53,7 @@ export class ArgumentParser<EA extends TelegramCommandArguments = TelegramComman
 
     const { validArgs, invalidArgs } = this.separateValidArguments(parsedResults);
 
-    const requiredArgsCount = Object.values(this.expected).filter((arg) => arg.required).length;
-    const hasEnoughValidArgs = Object.keys(validArgs).length >= requiredArgsCount;
+    const hasEnoughValidArgs = Object.keys(validArgs).length >= Object.keys(this.expected).length;
 
     if (!hasEnoughValidArgs) {
       return {
@@ -91,6 +94,14 @@ export class ArgumentParser<EA extends TelegramCommandArguments = TelegramComman
       return rawValue ?? expectedArg.default;
     }
 
+    if (expectedArg.type === 'mention') {
+      // TODO: regular exp
+      if (!rawValue.startsWith("@")) {
+        return null;
+      }
+      return rawValue;
+    }
+
     if (!rawValue && typeof expectedArg.default !== 'undefined') {
       return expectedArg.default;
     }
@@ -126,7 +137,7 @@ export class ArgumentParser<EA extends TelegramCommandArguments = TelegramComman
       },
       {
         type: 'valid-type',
-        condition: parsedValue !== undefined && parsedValue !== null,
+        condition: (parsedValue !== undefined && parsedValue !== null) || !expectedArg.required,
         received: rawValue,
       },
     ];
