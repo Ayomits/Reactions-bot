@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "dotenv": "^17.1.0",
-    "grammy": "^1.37.0"
+    "grammy": "^1.37.0",
+    "tg-text-formatter": "^1.2.1"
   }
 }

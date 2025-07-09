@@ -1,8 +1,4 @@
-import {
-  TelegramCommand,
-  TelegramCommandArguments,
-  TelegramExecuteArguments,
-} from '@/lib/telegram/commands/command';
+import { TelegramCommand } from '@/lib/telegram/commands/command';
 import { Context } from 'grammy';
 
 export class PingCommand implements TelegramCommand {

@@ -1,5 +1,8 @@
 import { LiteralEnum } from '@/lib/types/literal-enum';
-import { TelegramCommandArguments, TelegramExecuteArguments } from '../command';
+import {
+  TelegramCommandArguments,
+  TelegramExecuteArguments,
+} from '../../telegram/commands/command';
 import { ObjectKeys } from '@/lib/types/object-keys';
 import { KeyPrimitive } from '@/lib/types/key-primitive';
 

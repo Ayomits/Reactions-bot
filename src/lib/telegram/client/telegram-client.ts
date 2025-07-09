@@ -1,11 +1,11 @@
 import { Api, Bot, Context, RawApi } from 'grammy';
 import { TelegramCommand } from '../commands/command';
 import { TelegramConfig } from './telegram-client.confit';
-import { ArgumentParser } from '../commands/argumets/argument-parser';
+import { ArgumentParser } from '../../parsers/argumets/argument-parser';
 import {
   ArgumentParsePipelineResults,
   ArgumentParserOutputType,
-} from '../commands/argumets/argument-parser.types';
+} from '../../parsers/argumets/argument-parser.types';
 import { ObjectKeys } from '@/lib/types/object-keys';
 
 export class TelegramClient<C extends Context = Context, A extends Api = Api<RawApi>> extends Bot<

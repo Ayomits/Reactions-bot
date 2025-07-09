@@ -1,5 +1,5 @@
-import { ArgumentParsePipelineResults } from '@/lib/telegram/commands/argumets/argument-parser.types';
-import { createArguments } from '@/lib/telegram/commands/argumets/create-arguments';
+import { ArgumentParsePipelineResults } from '@/lib/parsers/argumets/argument-parser.types';
+import { createArguments } from '@/lib/parsers/argumets/create-arguments';
 import { TelegramCommand, TelegramExecuteArguments } from '@/lib/telegram/commands/command';
 import { ObjectKeys } from '@/lib/types/object-keys';
 import { Context } from 'grammy';

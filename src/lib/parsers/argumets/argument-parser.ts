@@ -3,7 +3,7 @@ import {
   TelegramCommandArgument,
   TelegramCommandArguments,
   TelegramExecuteArguments,
-} from '../command';
+} from '../../telegram/commands/command';
 import {
   ArgumentParsePipelineResult,
   ArgumentParserOutput,
@@ -11,28 +11,40 @@ import {
   RawParsedArgument,
 } from './argument-parser.types';
 import { ObjectKeys } from '@/lib/types/object-keys';
+import { Parser } from '../parser.interface';
 
-export class ArgumentParser {
-  constructor(
-    private readonly receivedArgs: string,
-    private readonly expected: TelegramCommandArguments,
-    private readonly separator: string = ' '
-  ) {}
+export class ArgumentParser<EA extends TelegramCommandArguments = TelegramCommandArguments>
+  implements Parser
+{
+  private readonly receivedArgs: string;
+  private readonly expected: TelegramCommandArguments;
+  private readonly separator: string = ' ';
 
-  public parse<EA extends TelegramCommandArguments>(): ArgumentParserOutput<EA> {
+  constructor(receivedArgs: string, expected: TelegramCommandArguments, separator: string = ' ') {
+    this.receivedArgs = receivedArgs;
+    this.expected = expected;
+    this.separator = separator;
+  }
+
+  public parse(): ArgumentParserOutput<EA> {
     const splitted = this.receivedArgs.split(this.separator);
     const parsedResults: Record<string, RawParsedArgument> = {};
 
-    Object.entries(this.expected).forEach(([key, expectedArg], index) => {
-      const rawValue = splitted[index] ?? '';
-      const { value, isValid, tests } = this.parseArgument(rawValue, expectedArg, index);
+    let currentIndex = 0;
 
-      parsedResults[key] = {
-        position: index + 1,
-        value,
-        isValid,
-        tests,
-      };
+    Object.entries(this.expected).forEach(([key, expectedArg]) => {
+      let rawValue: string;
+
+      if (expectedArg.type === 'text') {
+        rawValue = splitted.slice(currentIndex).join(this.separator).trim();
+        currentIndex = splitted.length;
+      } else {
+        rawValue = (splitted[currentIndex] ?? '').trim();
+        currentIndex++;
+      }
+
+      const { value, isValid, tests } = this.parseArgument(rawValue, expectedArg);
+      parsedResults[key] = { position: currentIndex, value, isValid, tests };
     });
 
     const { validArgs, invalidArgs } = this.separateValidArguments(parsedResults);
@@ -43,7 +55,7 @@ export class ArgumentParser {
     if (!hasEnoughValidArgs) {
       return {
         success: false,
-        obj: this.formatErrorResponse(invalidArgs) as unknown as Record<ObjectKeys<EA>, ArgumentParsePipelineResult>,
+        obj: this.formatErrorResponse(invalidArgs),
       };
     }
 
@@ -55,15 +67,14 @@ export class ArgumentParser {
 
   private parseArgument(
     rawValue: string,
-    expected: TelegramCommandArgument,
-    position: number
+    expectedArg: TelegramCommandArgument<unknown[], unknown>
   ): Omit<RawParsedArgument, 'position'> {
-    const parsedValue = this.parseTypedValue(rawValue, expected);
+    const parsedValue = this.parseTypedValue(rawValue, expectedArg);
 
-    const pipelines = this.getValidationPipelines(rawValue, expected, parsedValue);
+    const pipelines = this.getValidationPipelines(rawValue, parsedValue, expectedArg);
     const { isValid, results } = this.runPipelinesValidation(pipelines);
 
-    const finalValue = isValid ? parsedValue : expected.default;
+    const finalValue = isValid ? parsedValue : expectedArg.default;
 
     return {
       value: finalValue,
@@ -72,17 +83,24 @@ export class ArgumentParser {
     };
   }
 
-  private parseTypedValue(rawValue: string, expected: TelegramCommandArgument): unknown {
-    if (!rawValue && typeof expected.default !== 'undefined') {
-      return expected.default;
+  private parseTypedValue(
+    rawValue: string,
+    expectedArg: TelegramCommandArgument<unknown[], unknown>
+  ): unknown {
+    if (expectedArg.type === 'any') {
+      return rawValue ?? expectedArg.default;
     }
 
-    switch (expected.type) {
+    if (!rawValue && typeof expectedArg.default !== 'undefined') {
+      return expectedArg.default;
+    }
+
+    switch (expectedArg.type) {
       case 'number':
         const num = Number(rawValue);
-        return Number.isNaN(num) ? expected.default : num;
+        return Number.isNaN(num) ? expectedArg.default : num;
       case 'string':
-        return rawValue || expected.default || '';
+        return rawValue || expectedArg.default || '';
       default:
         return rawValue;
     }
@@ -90,20 +108,20 @@ export class ArgumentParser {
 
   private getValidationPipelines(
     rawValue: string,
-    expected: TelegramCommandArgument,
-    parsedValue: unknown
+    parsedValue: unknown,
+    expectedArg: TelegramCommandArgument<unknown[], unknown>
   ): ArgumentParserPipeline[] {
     return [
       {
         type: 'is-required',
-        condition: !expected.required || !!parsedValue,
+        condition: !expectedArg.required || !!parsedValue,
         received: rawValue,
       },
       {
         type: 'is-allowed',
         condition:
-          !expected.allowedValues?.length ||
-          this.isValueAllowed(parsedValue, expected.allowedValues),
+          !expectedArg.allowedValues?.length ||
+          this.isValueAllowed(parsedValue, expectedArg.allowedValues),
         received: rawValue,
       },
       {
@@ -164,6 +182,6 @@ export class ArgumentParser {
   private formatErrorResponse(invalidArgs: Record<string, RawParsedArgument>) {
     return Object.fromEntries(
       Object.entries(invalidArgs).map(([key, arg]) => [key, arg.tests])
-    ) as unknown as Record<ObjectKeys<typeof this.expected>, ArgumentParsePipelineResult[]>;
+    ) as unknown as Record<ObjectKeys<EA>, ArgumentParsePipelineResult>;
   }
 }

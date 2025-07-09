@@ -1,15 +1,12 @@
 import { Context } from 'grammy';
 import { LiteralEnum } from '../../types/literal-enum';
-import {
-  ArgumentParsePipelineResult,
-  ArgumentParsePipelineResults,
-} from './argumets/argument-parser.types';
-import { KeyPrimitive } from '@/lib/types/key-primitive';
-import { ObjectKeys } from '@/lib/types/object-keys';
+import { ArgumentParsePipelineResults } from '../../parsers/argumets/argument-parser.types';
 
 export const ArgumentType = {
   String: 'string',
   Number: 'number',
+  Any: 'any',
+  Text: "text"
 } as const;
 
 export type ArgumentType = LiteralEnum<typeof ArgumentType>;
@@ -49,5 +46,9 @@ export interface TelegramCommand<
   args?: AR;
 
   execute(ctx: C, args?: TelegramExecuteArguments<keyof AR & string>): Promise<unknown> | unknown;
-  fallback?(ctx: C, results: ArgumentParsePipelineResults<keyof AR & string>): Promise<unknown> | unknown
+
+  fallback?(
+    ctx: C,
+    results: ArgumentParsePipelineResults<keyof AR & string>
+  ): Promise<unknown> | unknown;
 }
